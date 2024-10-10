@@ -8,6 +8,9 @@ export const users = pgTable('users', {
     username: text('username').notNull(),
     email: text('email').notNull(),
     password: text('password').notNull(),
+    fullname: text('fullname').notNull(),
+    bio: text('bio'),
+    profile_image_url: text('profile_image_url'),
     salt: text('salt'),
     sessiontoken: text('sessiontoken'),
 });
@@ -21,11 +24,25 @@ const pool = new Pool({
 
 const db = drizzle(pool);
 
-export const getUsers = async (limit: number, offset: number): Promise<any> =>{
+export const getUsers = async (limit: number, offset: number): Promise<any> => {
     try {
-        const [result,totalCount] = await Promise.all([
-            db.select({ id: users.id, username: users.username, email: users.email }).from(users).limit(limit).offset(offset),
-            db.select({ count: sql`count(${users.id})` }).from(users).then(rows => rows[0].count)
+        const [result, totalCount] = await Promise.all([
+            db
+                .select({
+                    id: users.id,
+                    username: users.username,
+                    email: users.email,
+                    fullname: users.fullname,
+                    bio: users.bio,
+                    profile_image_url: users.profile_image_url,
+                })
+                .from(users)
+                .limit(limit)
+                .offset(offset),
+            db
+                .select({ count: sql`count(${users.id})` })
+                .from(users)
+                .then(rows => rows[0].count),
         ]);
 
         const totalPages = Math.ceil(parseInt(totalCount.toString()) / limit);
@@ -34,32 +51,48 @@ export const getUsers = async (limit: number, offset: number): Promise<any> =>{
             data: result,
             currentPage: offset / limit + 1,
             totalPages,
-            limit
-        }
-
+            limit,
+        };
     } catch (e) {
         console.log(e);
         return {
             data: [],
             currentPage: 0,
             totalPages: 0,
-            limit: 0
-        }
+            limit: 0,
+        };
     }
-}
+};
 
 export const getUserByEmail = async (email: string) =>
     await db.select().from(users).where(eq(users.email, email));
+
 export const getUserBySessionToken = async (sessionToken: string) =>
     await db.select().from(users).where(eq(users.sessiontoken, sessionToken));
+
 export const createUser = async (newUser: NewUser) =>
     await db
         .insert(users)
         .values(newUser)
-        .returning({ id: users.id, username: users.username, email: users.email });
+        .returning({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            fullname: users.fullname,
+            bio: users.bio,
+            profile_image_url: users.profile_image_url,
+        });
+
 export const updateUserById = async (id: number, updatedUser: User) =>
     await db
         .update(users)
         .set(updatedUser)
         .where(eq(users.id, id))
-        .returning({ id: users.id, username: users.username, email: users.email });
+        .returning({
+            id: users.id,
+            username: users.username,
+            email: users.email,
+            fullname: users.fullname,
+            bio: users.bio,
+            profile_image_url: users.profile_image_url,
+        });

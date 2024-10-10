@@ -5,7 +5,7 @@ import { DOMAIN, SESSION_TOKEN } from '../constants';
 
 export const register = async (req: express.Request, res: express.Response) => {
     try {
-        const { username, email, password } = req.body;
+        const { username, email, password, fullname, bio, profile_image_url } = req.body;
 
         if (!username || !email || !password) {
             return res.sendStatus(400);
@@ -21,6 +21,9 @@ export const register = async (req: express.Request, res: express.Response) => {
         const user = await createUser({
             username,
             email,
+            fullname,
+            bio,
+            profile_image_url,
             salt,
             password: authentication(salt, password),
         });
