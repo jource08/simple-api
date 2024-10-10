@@ -1,12 +1,22 @@
 import express from 'express';
+import http from 'http';
+import bodyParser from 'body-parser';
+import cookieParser from 'cookie-parser';
+import compression from 'compression';
+import cors from 'cors';
+import 'dotenv/config';
+import router from './router';
+
 const app = express();
 
-app.get('/', (req, res) => {
-  const name = process.env.NAME || 'World';
-  res.send(`Hello ${name}!`);
-});
+app.use(cors({ credentials: true }));
+app.use(compression());
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use('/', router);
 
-const port = parseInt(process.env.PORT || '3000');
-app.listen(port, () => {
-  console.log(`listening on port ${port}`);
+const server = http.createServer(app);
+
+server.listen(8080, () => {
+    console.log('Server running...');
 });

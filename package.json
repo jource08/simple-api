@@ -1,22 +1,28 @@
 {
-  "name": "node-express-api-ts",
-  "description": "Simple api sample in Node",
-  "version": "1.0.0",
-  "private": true,
-  "main": "index.js",
-  "scripts": {
-    "dev": "nodemon --watch 'src/**' --ext 'ts,json' --exec 'npm run build && npm run start'",
-    "build": "tsc",
-    "start": "node dist/index.js"
-  },
-  "author": "Google LLC",
-  "license": "Apache-2.0",
-  "dependencies": {
-    "express": "^4.19.2"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.0",
-    "typescript": "^5.4.5",
-    "@types/node": "^20.12.12"
-  }
+    "scripts": {
+        "start": "nodemon"
+    },
+    "dependencies": {
+        "body-parser": "^1.20.2",
+        "compression": "^1.7.4",
+        "cookie-parser": "^1.4.6",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "drizzle-orm": "^0.27.2",
+        "express": "^4.18.2",
+        "pg": "^8.11.1"
+    },
+    "devDependencies": {
+        "@types/body-parser": "^1.19.2",
+        "@types/compression": "^1.7.2",
+        "@types/cookie-parser": "^1.4.3",
+        "@types/cors": "^2.8.13",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.4.4",
+        "@types/pg": "^8.10.2",
+        "drizzle-kit": "^0.19.11",
+        "nodemon": "^3.0.1",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.1.6"
+    }
 }
