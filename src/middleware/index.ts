@@ -11,18 +11,18 @@ export const isAuthenticated = async (
         const sessionToken = req.cookies[SESSION_TOKEN];
 
         if (!sessionToken) {
-            return res.sendStatus(403);
+            return res.status(403).json({ message: 'No session token provided. Access denied.' });
         }
 
         const result = await getUserBySessionToken(sessionToken);
 
         if (!result || result.length === 0) {
-            return res.sendStatus(403);
+            return res.status(403).json({ message: 'Invalid session token. Authentication failed.' });
         }
 
         return next();
     } catch (e) {
-        console.log(e);
-        return res.sendStatus(400);
+        console.error(e);
+        return res.status(400).json({ message: 'An error occurred while validating session token.' });
     }
 };
