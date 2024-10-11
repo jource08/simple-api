@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { InferModel, eq, sql } from 'drizzle-orm';
+import { InferModel, eq, sql,ilike, or } from 'drizzle-orm';
 import { pgTable, serial, text } from 'drizzle-orm/pg-core';
 import { Pool } from 'pg';
 
@@ -24,7 +24,7 @@ const pool = new Pool({
 
 const db = drizzle(pool);
 
-export const getUsers = async (limit: number, offset: number): Promise<any> => {
+export const getUsers = async (limit: number, offset: number, sortBy: string, sortDirection: 'ASC' | 'DESC'): Promise<any> => {
     try {
         const [result, totalCount] = await Promise.all([
             db
@@ -37,6 +37,7 @@ export const getUsers = async (limit: number, offset: number): Promise<any> => {
                     profile_image_url: users.profile_image_url,
                 })
                 .from(users)
+                .orderBy(sql.raw(`${sortBy} ${sortDirection}`))
                 .limit(limit)
                 .offset(offset),
             db
@@ -51,6 +52,7 @@ export const getUsers = async (limit: number, offset: number): Promise<any> => {
             data: result,
             currentPage: offset / limit + 1,
             totalPages,
+            totalCount: parseInt(totalCount.toString()),
             limit,
         };
     } catch (e) {
@@ -59,6 +61,63 @@ export const getUsers = async (limit: number, offset: number): Promise<any> => {
             data: [],
             currentPage: 0,
             totalPages: 0,
+            totalCount: 0,
+            limit: 0,
+        };
+    }
+};
+
+export const searchUsers = async (searchTerm: string, limit: number, offset: number, sortBy: string, sortDirection: 'ASC' | 'DESC') => {
+    try {
+        const result = await db
+            .select({
+                id: users.id,
+                username: users.username,
+                email: users.email,
+                fullname: users.fullname,
+                bio: users.bio,
+                profile_image_url: users.profile_image_url,
+            })
+            .from(users)
+            .where(
+                or(
+                    ilike(users.username, `%${searchTerm}%`),
+                    ilike(users.email, `%${searchTerm}%`),
+                    ilike(users.fullname, `%${searchTerm}%`)
+                )
+            )
+            .orderBy(sql.raw(`${sortBy} ${sortDirection}`))
+            .limit(limit)
+            .offset(offset);
+
+        const totalCount = await db
+            .select({ count: sql`count(${users.id})` })
+            .from(users)
+            .where(
+                or(
+                    ilike(users.username, `%${searchTerm}%`),
+                    ilike(users.email, `%${searchTerm}%`),
+                    ilike(users.fullname, `%${searchTerm}%`)
+                )
+            )
+            .then(rows => rows[0].count);
+
+        const totalPages = Math.ceil(parseInt(totalCount.toString()) / limit);
+
+        return {
+            data: result,
+            currentPage: offset / limit + 1,
+            totalPages,
+            totalCount: parseInt(totalCount.toString()),
+            limit,
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            data: [],
+            currentPage: 0,
+            totalPages: 0,
+            totalCount: 0,
             limit: 0,
         };
     }
@@ -97,4 +156,3 @@ export const updateUserById = async (id: number, updatedUser: Partial<User>) => 
             profile_image_url: users.profile_image_url,
         });
 };
-        
