@@ -118,12 +118,12 @@ const generateOtp = (): string => {
     return otp.toString();
 };
 
-export const verifyOtp = async (req: express.Request, res: express.Response) => {
+export const resetPassword = async (req: express.Request, res: express.Response) => {
     try {
-        const { email, otp } = req.body;
+        const { email, otp, newPassword } = req.body;
 
-        if (!email || !otp) {
-            return res.status(400).json({ message: 'Email and OTP are required' });
+        if (!email || !otp || !newPassword) {
+            return res.status(400).json({ message: 'Email, OTP, and new password are required' });
         }
 
         // Check if OTP exists for the provided email in memory
@@ -131,11 +131,32 @@ export const verifyOtp = async (req: express.Request, res: express.Response) => 
             return res.status(400).json({ message: 'Invalid OTP or OTP expired' });
         }
 
-        // If OTP is correct, proceed with further password reset logic
-        // Remove OTP from memory after successful verification
+        // Check if the user exists
+        const user = await getUserByEmail(email);
+        if (!user || user.length === 0) {
+            return res.status(400).json({ message: 'User not found with that email' });
+        }
+
+        const updatedUser = user[0];
+
+        // Check if the new password is the same as the current password
+        const expectedHash = authentication(updatedUser.salt, newPassword);
+        if (updatedUser.password === expectedHash) {
+            return res.status(400).json({ message: 'New password cannot be the same as the old password' });
+        }
+
+        // Update the password
+        const salt = random(); // Generate new salt
+        updatedUser.password = authentication(salt, newPassword); // Hash the new password with salt
+        updatedUser.salt = salt;
+
+        // Update user with the new password
+        const result = await updateUserById(updatedUser.id, updatedUser);
+
+        // Remove OTP from memory after successful password reset
         delete otpMemoryStore[email];
 
-        return res.status(200).json({ message: 'OTP verified successfully' });
+        return res.status(200).json({ message: 'Password reset successfully', data: result });
     } catch (e) {
         console.error(e);
         return res.status(500).json({ message: 'Something went wrong. Please try again later.' });
