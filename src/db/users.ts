@@ -83,8 +83,8 @@ export const createUser = async (newUser: NewUser) =>
             profile_image_url: users.profile_image_url,
         });
 
-export const updateUserById = async (id: number, updatedUser: User) =>
-    await db
+export const updateUserById = async (id: number, updatedUser: Partial<User>) => {
+    return await db
         .update(users)
         .set(updatedUser)
         .where(eq(users.id, id))
@@ -96,3 +96,5 @@ export const updateUserById = async (id: number, updatedUser: User) =>
             bio: users.bio,
             profile_image_url: users.profile_image_url,
         });
+};
+        
